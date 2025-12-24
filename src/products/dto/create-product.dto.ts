@@ -1,12 +1,16 @@
-import { IsString, IsNumber } from 'class-validator';
+import { Prisma } from 'src/generated/prisma/browser';
 
-export class CreateProductDto {
-    @IsString({ message: 'Nombre debe ser un texto' })
+export class CreateProductDto implements Prisma.ProductCreateInput {
+
     name: string;
 
-    @IsNumber({}, { message: 'Precio debe ser un número' })
-    price: number;
+    slug: string;
 
-    @IsString({ message: 'La descripcion debe ser un texto' })
     description: string;
+
+    priceSale: number;
+
+    pricePurchase: number;
+
+    stock: number;
 }

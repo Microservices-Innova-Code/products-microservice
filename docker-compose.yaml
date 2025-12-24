@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  products-db:
+    image: postgres:13.5
+    container_name: products-db
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: products
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+  

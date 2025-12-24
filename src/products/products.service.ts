@@ -1,53 +1,84 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
 
-    private products = [
-        { id: 1, name: 'Producto 1', description: 'Descripción del producto 1', price: 100 },
-        { id: 2, name: 'Producto 2', description: 'Descripción del producto 2', price: 200 },
-        { id: 3, name: 'Producto 3', description: 'Descripción del producto 3', price: 300 },
-    ];
+    constructor(
+        private readonly prisma: PrismaService,
+    ) { }
 
-    create(createProductDto: CreateProductDto) {
+    async create(createProductDto: CreateProductDto) {
 
-        this.products.push({
-            id: this.products.length + 1,
-            ...createProductDto,
+        try {
+            const slug = createProductDto.name
+                .toLowerCase()
+                .replace(/ /g, '-')
+                .replace(/[^\w-]+/g, '');
 
-            // name: createProductDto.name,
-            // price: createProductDto.price,
-            // description: createProductDto.description,
-        })
 
-        return {
-            message: 'Producto creado exitosamente',
+            await this.prisma.product.create({
+                data: {
+                    ...createProductDto,
+                    slug,
+                }
+            })
+
+            return {
+                message: 'Product created successfully',
+            }
+        } catch (error) {
+            if( error.code === 'P2002' && error.meta.cause.constraint.fields.includes('slug')) {
+                console.log('error', error);
+                throw new Error('Product with this name already exists');
+            }
+            throw error;
         }
     }
 
-    findAll() {
+    async findAll() {
+        const products = await this.prisma.product.findMany();
 
         return {
-            products: this.products,
+            products,
         };
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} product`;
+    async findOne(id: string) {
+        const productExists = await this.prisma.product.findUnique({
+            where: {
+                id: id,
+            }
+        })
+
+        if (!productExists) {
+            throw new Error('Product not found');
+        }
+
+        return {
+            product: productExists,
+        }
+
     }
 
-    update(id: number, updateProductDto: UpdateProductDto) {
+    update(id: string, updateProductDto: UpdateProductDto) {
         return `This action updates a #${id} product`;
     }
 
-    remove(id: number) {
-        const updatedProducts = this.products.filter(product => product.id !== id);
-        this.products = updatedProducts;
-        
+    async remove(id: string) {
+        await this.findOne(id);
+
+        await this.prisma.product.delete({
+            where: {
+                id: id,
+            }
+        })
+
         return {
-            message: `Producto con id ${id} eliminado exitosamente`,
+            message: 'Product deleted successfully',
         }
+
     }
 }
