@@ -1,8 +1,8 @@
-import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
+import { envs } from './config/envs';
 
 async function bootstrap() {
     
@@ -13,7 +13,7 @@ async function bootstrap() {
         {
             transport: Transport.NATS,
             options: {
-                servers: 'nats://localhost:4222',
+                servers: envs.natsServer,
                 name: 'PRODUCTS_MICROSERVICE',
             }
         }

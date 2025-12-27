@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { envs } from 'src/config/envs';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -10,7 +11,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     constructor() {
         try {
-            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            const pool = new Pool({ connectionString: envs.databaseUrl });
             const adapter = new PrismaPg(pool);
             super({ adapter });
             this.logger.log('Connected to Products Database');
