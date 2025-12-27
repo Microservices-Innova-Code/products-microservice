@@ -2,9 +2,12 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
     
+    const logger = new Logger('Products Microservice');
+
     const app = await NestFactory.createMicroservice<MicroserviceOptions>(
         AppModule,
         {
@@ -15,7 +18,10 @@ async function bootstrap() {
             }
         }
     );
-    
+
     await app.listen();
+
+    logger.log('Products Microservice is running on Nats Server')
+
 }
 bootstrap();

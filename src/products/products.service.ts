@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class ProductsService {
@@ -11,7 +12,7 @@ export class ProductsService {
     ) { }
 
     async create(createProductDto: CreateProductDto) {
-
+        
         try {
             const slug = createProductDto.name
                 .toLowerCase()
@@ -30,11 +31,17 @@ export class ProductsService {
                 message: 'Product created successfully',
             }
         } catch (error) {
-            if( error.code === 'P2002' && error.meta.cause.constraint.fields.includes('slug')) {
-                console.log('error', error);
-                throw new Error('Product with this name already exists');
+            if( error.code === 'P2002') {
+                throw new RpcException({
+                    statusCode: 400,
+                    message: 'El producto con este nombre ya existe',
+                });
             }
-            throw error;
+
+            throw new RpcException({
+                statusCode: 500,
+                message: 'Internal server error desde products ms',
+            });
         }
     }
 
@@ -54,7 +61,10 @@ export class ProductsService {
         })
 
         if (!productExists) {
-            throw new Error('Product not found');
+            throw new RpcException({
+                statusCode: 404,
+                message: 'No se encontro el producto',
+            })
         }
 
         return {
