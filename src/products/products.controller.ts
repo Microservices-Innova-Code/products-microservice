@@ -32,4 +32,14 @@ export class ProductsController {
     remove(@Payload() id: string) {
         return this.productsService.remove(id);
     }
+
+    @MessagePattern('products.validateIds')
+    validateIds(@Payload() productIds: string[]) {
+        return this.productsService.validateProductIds(productIds);
+    }
+
+    @MessagePattern('products.updateStock')
+    updateStock(@Payload() orderItems: { id: string, quantity: number }[]) {
+        return this.productsService.updateProductStock(orderItems);
+    }
 }

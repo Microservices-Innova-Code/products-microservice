@@ -91,4 +91,61 @@ export class ProductsService {
         }
 
     }
+
+    async validateProductIds(productIds: string[]){
+
+        const ids = Array.from(new Set(productIds));
+
+        const products = await this.prisma.product.findMany({
+            where: {
+                id: {
+                    in: ids,
+                }
+            }
+        })
+
+        if( productIds.length !== products.length ){
+            throw new RpcException({
+                statusCode: 400,
+                message: 'Algunos productos no existen',
+            });
+        }
+
+        return products;
+    }
+    
+    async updateProductStock(orderItems: { id: string, quantity: number }[]){
+        const productIds = orderItems.map(product => product.id);
+
+        const products = await this.prisma.product.findMany({
+            where: {
+                id: {
+                    in: productIds,
+                }
+            }
+        });
+
+        products.map((product, index) => {
+            if( product.stock < orderItems[index].quantity ){
+                throw new RpcException({
+                    statusCode: 400,
+                    message: `No hay suficiente stock del producto ${product.name}`,
+                });
+            }
+        });
+
+        products.map(async (product, index) => {
+            const newStock = product.stock - orderItems[index].quantity;
+            await this.prisma.product.update({
+                where: {
+                    id: product.id,
+                },
+                data: {
+                    stock: newStock,
+                }
+            })
+        })
+
+        return true;
+    }
 }
